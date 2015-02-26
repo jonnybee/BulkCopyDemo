@@ -29,7 +29,7 @@ The test project uses FluentMigrator to create the actual table on first run.
 
 # Different ways to do Bulk Insert #
 
-There is 2 basic variants for builk insert in X# / .NET: SqlBulkCopy and SqlDataAdapter
+There is 2 basic variants for builk insert in C#/.NET: SqlBulkCopy and SqlDataAdapter
 
 SqlDataAdapter is remarkably slow. On my dev computer it takes about 10seconds to bulk insert 100000 rows into a table with 3 colums.  So whenever possible I would avoid using SqlDataAdapter. On the positive side, SqlDataAdapter supportes both Insert/Update/Delete on rows in a data table so you are not limited to just Insert
 
@@ -40,7 +40,6 @@ In my code the focus is on using SqlBulkCopy in an as simple way as possible wit
 So assuming that you have a data list og datatable in memory you just call: 
 
     new DataLoader().BulkInsert(connection, "tablename", data);
-
 
 or you may also choose the overload that allows you to specify SqlBulkCopyOptions like TableLock (default value is RowLock)
 
