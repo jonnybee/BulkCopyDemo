@@ -44,4 +44,8 @@ So assuming that you have a data list og datatable in memory you just call:
 
 or you may also choose the overload that allows you to specify SqlBulkCopyOptions like TableLock (default value is RowLock)
 
-    new DataLoader().BulkInsert(connection, "tablename", data, SqlBulkCopyOptions.TableLock)	
+    new DataLoader().BulkInsert(connection, "tablename", data, SqlBulkCopyOptions.TableLock);
+
+And you may also specify the BatchSize (default size is 10000)
+
+    new DataLoader(){BatchSize = 1000}.BulkInsert(connection, "tablename", data);
