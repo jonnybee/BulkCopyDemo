@@ -39,9 +39,9 @@ In my code the focus is on using SqlBulkCopy in an as simple way as possible wit
 
 So assuming that you have a data list og datatable in memory you just call: 
 
-    new DataLoader().BulkInsert(connection, "BulkTable", data);
+    new DataLoader().BulkInsert(connection, "tablename", data);
 
 
 or you may also choose the overload that allows you to specify SqlBulkCopyOptions like TableLock (default value is RowLock)
 
-    new DataLoader().BulkInsert(connection, "BulkTable", data, SqlBulkCopyOptions.TableLock)	
+    new DataLoader().BulkInsert(connection, "tablename", data, SqlBulkCopyOptions.TableLock)	
