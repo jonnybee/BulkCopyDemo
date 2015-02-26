@@ -38,7 +38,10 @@ SqlBulkCopy is similar to **bcp**  command in SqlServer and will accept a DataTa
 In my code the focus is on using SqlBulkCopy in an as simple way as possible with typically a list of poco object or from a datatable that is build in your own C# code and internally transform the poco list to a DataTable and do BulkInsert on the items. 
 
 So assuming that you have a data list og datatable in memory you just call: 
-    new DataLoader().BulkInsert(connection, "BulkTable", data); 	
+
+    new DataLoader().BulkInsert(connection, "BulkTable", data);
+
 
 or you may also choose the overload that allows you to specify SqlBulkCopyOptions like TableLock (default value is RowLock)
+
     new DataLoader().BulkInsert(connection, "BulkTable", data, SqlBulkCopyOptions.TableLock)	
