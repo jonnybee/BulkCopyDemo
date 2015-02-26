@@ -9,6 +9,9 @@ using Fasterflect;
 
 namespace BulkDemo.Data
 {
+    /// <summary>
+    /// This is the wrapper class for performing efficient BulkInserts
+    /// </summary>
     public class DataLoader
     {
         public DataLoader()
@@ -16,13 +19,27 @@ namespace BulkDemo.Data
             BatchSize = 10000;
         }
 
+        /// <summary>
+        /// Gets or sets the size of the batch.
+        /// </summary>
+        /// <value>
+        /// The size of the batch size, default is 10000.
+        /// </value>
         public int BatchSize { get; set; }
 
         #region DBUtils
 
+        /// <summary>
+        /// Truncates the given table.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="tableName">Name of the table.</param>
         public void TruncateTable(SqlConnection connection, string tableName)
         {
-            using (var cmd = new SqlCommand(string.Format("truncate table {0};", tableName), connection))
+            // check tablename for SqlInjection
+            if (tableName.Contains(";") || tableName.Contains("--")) throw new ArgumentException();
+
+            using (var cmd = new SqlCommand(string.Format("truncate table {0}", tableName), connection))
             {
                 cmd.ExecuteNonQuery();
             }
@@ -34,19 +51,20 @@ namespace BulkDemo.Data
 
         #region SqlBulkInsert DataTable
 
-        public void BulkInsert(SqlConnection connection, string tableName, DataTable table)
-        {
-            BulkInsert(connection, tableName, table, SqlBulkCopyOptions.Default);
-        }
-
-
-        public void BulkInsert(SqlConnection connection, string tableName, DataTable table, SqlBulkCopyOptions options)
+        /// <summary>
+        /// Does the BulkInsert of data in DataTable.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="dataTable">Tha data in a DataTable</param>
+        /// <param name="options">The SqlBulkCopyOptions such as f.ex TableLock.</param>
+        public void BulkInsert(SqlConnection connection, string tableName, DataTable dataTable, SqlBulkCopyOptions options = SqlBulkCopyOptions.Default)
         {
             using (var bulkCopy = new SqlBulkCopy(connection, options, null))
             {
                 bulkCopy.DestinationTableName = tableName;
                 bulkCopy.BatchSize = BatchSize;
-                bulkCopy.WriteToServer(table);
+                bulkCopy.WriteToServer(dataTable);
                 bulkCopy.Close();
             }
         }
@@ -55,35 +73,38 @@ namespace BulkDemo.Data
 
         #region BulkInsert POCO
 
-        public void BulkInsert<T>(SqlConnection connection, string tableName, IList<T> list)
-        {
-            BulkInsert<T>(connection, tableName, list, SqlBulkCopyOptions.Default);
-        }
-
-
-        public void BulkInsert<T>(SqlConnection connection, string tableName, IList<T> list, SqlBulkCopyOptions options)
+        /// <summary>
+        /// Does the BulkInsert of data in DataTable.
+        /// </summary>
+        /// <param name="connection">The connection.</param>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="list">The data in an IEnumerable of poco class.</param>
+        /// <param name="options">The SqlBulkCopyOptions such as f.ex. TableLock.</param>
+        public void BulkInsert<T>(SqlConnection connection, string tableName, IEnumerable<T> list, SqlBulkCopyOptions options = SqlBulkCopyOptions.Default)
         {
             using (var bulkCopy = new SqlBulkCopy(connection))
             {
                 bulkCopy.BatchSize = BatchSize;
                 bulkCopy.DestinationTableName = tableName;
-                var table = ListToDataTableFasterflect(list);
+                var table = ListToDataTable(list);
                 bulkCopy.WriteToServer(table);
             }
         }
 
-        public void BulkInsert<T>(string connection, string tableName, IList<T> list)
+        /// <summary>
+        /// Does the BulkInsert of data in DataTable.
+        /// </summary>
+        /// <param name="connectionString">The connection string.</param>
+        /// <param name="tableName">Name of the table.</param>
+        /// <param name="list">The data in an IEnumerable of poco class.</param>
+        /// <param name="options">The SqlBulkCopyOptions such as f.ex. TableLock.</param>
+        public void BulkInsert<T>(string connectionString, string tableName, IEnumerable<T> list, SqlBulkCopyOptions options = SqlBulkCopyOptions.Default)
         {
-            BulkInsert<T>(connection, tableName, list, SqlBulkCopyOptions.Default);
-        }
-
-        public void BulkInsert<T>(string connection, string tableName, IList<T> list, SqlBulkCopyOptions options)
-        {
-            using (var bulkCopy = new SqlBulkCopy(connection))
+            using (var bulkCopy = new SqlBulkCopy(connectionString))
             {
                 bulkCopy.BatchSize = BatchSize;
                 bulkCopy.DestinationTableName = tableName;
-                var table = ListToDataTableFasterflect(list);
+                var table = ListToDataTable(list);
                 bulkCopy.WriteToServer(table);
             }
         }
@@ -92,7 +113,13 @@ namespace BulkDemo.Data
 
         #region List<POCO> to DataTable
 
-        public static DataTable ListToDataTable<T>(IList<T> list)
+        /// <summary>
+        /// Transforms a list of poco objects to a DataTable
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list">The list.</param>
+        /// <returns></returns>
+        public static DataTable ListToDataTable<T>(IEnumerable<T> list)
         {
             var table = new DataTable();
             var props = TypeDescriptor.GetProperties(typeof(T))
@@ -119,7 +146,14 @@ namespace BulkDemo.Data
             return table;
         }
 
-        public static DataTable ListToDataTableFasterflect<T>(IList<T> list)
+        /// <summary>
+        /// Transforms a list of poco objects to a DataTable
+        /// Uses FasterFlect to get the property values. 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list">The list.</param>
+        /// <returns></returns>
+        public static DataTable ListToDataTableFasterflect<T>(IEnumerable<T> list)
         {
             var table = new DataTable();
             var props = TypeDescriptor.GetProperties(typeof(T))
