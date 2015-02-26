@@ -30,48 +30,19 @@ namespace BulkDemo.Data
 
         #endregion
 
-        #region SqlDataAdapter
 
-        public void BulkInsertWithSqlDataAdapter(SqlConnection connection, DataTable table)
+
+        #region SqlBulkInsert DataTable
+
+        public void BulkInsert(SqlConnection connection, string tableName, DataTable table)
         {
-            using (var insertCommand = new SqlCommand("INSERT BulkTable(ID, Name, EMail) VALUES (@ID, @Name, @EMail)", connection))
-            {
-                insertCommand.Parameters.Add("@ID", SqlDbType.Int, 4, "ID");
-                insertCommand.Parameters.Add("@Name", SqlDbType.VarChar, 200, "Name");
-                insertCommand.Parameters.Add("@EMail", SqlDbType.VarChar, 200, "EMail");
-
-                insertCommand.UpdatedRowSource = UpdateRowSource.None;
-                using (var insertAdapter = new SqlDataAdapter())
-                {
-                    insertAdapter.InsertCommand = insertCommand;
-                    insertAdapter.UpdateBatchSize = BatchSize;
-                    insertAdapter.Update(table);
-                }
-            }
+            BulkInsert(connection, tableName, table, SqlBulkCopyOptions.Default);
         }
 
-        #endregion
 
-        #region SqlBulkCopy
-
-        public void BulkInsertWithSqlBulkCopy(SqlConnection connection, string tableName, DataTable table)
+        public void BulkInsert(SqlConnection connection, string tableName, DataTable table, SqlBulkCopyOptions options)
         {
-            using (var bulkCopy = new SqlBulkCopy(connection))
-            {
-                bulkCopy.DestinationTableName = tableName;
-                bulkCopy.BatchSize = BatchSize;
-                bulkCopy.WriteToServer(table);
-                bulkCopy.Close();
-            }
-        }
-
-        #endregion
-
-        #region SqlBulkCopyTableLock
-
-        public void BulkInsertWithSqlBulkCopyAndTableLock(SqlConnection connection, string tableName, DataTable table)
-        {
-            using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, null))
+            using (var bulkCopy = new SqlBulkCopy(connection, options, null))
             {
                 bulkCopy.DestinationTableName = tableName;
                 bulkCopy.BatchSize = BatchSize;
@@ -86,6 +57,12 @@ namespace BulkDemo.Data
 
         public void BulkInsert<T>(SqlConnection connection, string tableName, IList<T> list)
         {
+            BulkInsert<T>(connection, tableName, list, SqlBulkCopyOptions.Default);
+        }
+
+
+        public void BulkInsert<T>(SqlConnection connection, string tableName, IList<T> list, SqlBulkCopyOptions options)
+        {
             using (var bulkCopy = new SqlBulkCopy(connection))
             {
                 bulkCopy.BatchSize = BatchSize;
@@ -97,35 +74,14 @@ namespace BulkDemo.Data
 
         public void BulkInsert<T>(string connection, string tableName, IList<T> list)
         {
+            BulkInsert<T>(connection, tableName, list, SqlBulkCopyOptions.Default);
+        }
+
+        public void BulkInsert<T>(string connection, string tableName, IList<T> list, SqlBulkCopyOptions options)
+        {
             using (var bulkCopy = new SqlBulkCopy(connection))
             {
                 bulkCopy.BatchSize = BatchSize;
-                bulkCopy.DestinationTableName = tableName;
-                var table = ListToDataTableFasterflect(list);
-                bulkCopy.WriteToServer(table);
-            }
-        }
-
-        #endregion
-
-        #region BulkInsert POCO TableLock
-
-        public static void BulkInsertWithTableLock<T>(SqlConnection connection, string tableName, IList<T> list)
-        {
-            using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, null))
-            {
-                bulkCopy.BatchSize = list.Count;
-                bulkCopy.DestinationTableName = tableName;
-                var table = ListToDataTableFasterflect(list);
-                bulkCopy.WriteToServer(table);
-            }
-        }
-
-        public static void BulkInsertWithTableLock<T>(string connection, string tableName, IList<T> list)
-        {
-            using (var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock))
-            {
-                bulkCopy.BatchSize = list.Count;
                 bulkCopy.DestinationTableName = tableName;
                 var table = ListToDataTableFasterflect(list);
                 bulkCopy.WriteToServer(table);

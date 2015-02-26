@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using BulkDemo.Data;
@@ -13,6 +14,7 @@ namespace BulkDemo.Test
         public class BulkInsertWithSqlBulkCopy
         {
             private SqlConnection connection;
+            private DataTable data;
 
 
             [SetUp]
@@ -20,15 +22,14 @@ namespace BulkDemo.Test
             {
                 connection = Db.GetConnection();
                 new DataLoader().TruncateTable(connection, "BulkTable");
+                data = new Generator().GetDataTableData();
             }
 
             [Test]
             public void Insert100000RowsFromDataTable()
             {
-                var data = new Generator().GetDataTableData();
-
-                Utils.TimedAction("Using SqlBulkCopy: {0} ms",
-                                  () => new DataLoader().BulkInsertWithSqlBulkCopy(connection, "BulkTable", data));
+                Utils.TimedAction("Using SqlBulkCopyFromDataTable: {0} ms",
+                                  () => new DataLoader().BulkInsert(connection, "BulkTable", data));
             }
         }
 
@@ -36,6 +37,7 @@ namespace BulkDemo.Test
         public class BulkInsertWithSqlBulkCopyAndTableLock
         {
             private SqlConnection connection;
+            private DataTable data;
 
 
             [SetUp]
@@ -43,15 +45,14 @@ namespace BulkDemo.Test
             {
                 connection = Db.GetConnection();
                 new DataLoader().TruncateTable(connection, "BulkTable");
+                data = new Generator().GetDataTableData();
             }
 
             [Test]
             public void Insert100000RowsFromDataTableWithTableLock()
             {
-                var data = new Generator().GetDataTableData();
-
-                Utils.TimedAction("Using SqlBulkCopyAndTableLock: {0} ms",
-                                  () => new DataLoader().BulkInsertWithSqlBulkCopyAndTableLock(connection, "BulkTable", data));
+                Utils.TimedAction("Using SqlBulkCopyFromDataTableWithTableLock: {0} ms",
+                                  () =>  new DataLoader().BulkInsert(connection, "BulkTable", data, SqlBulkCopyOptions.TableLock));
             }
         }
 
@@ -59,20 +60,20 @@ namespace BulkDemo.Test
         public class BulkInsertPocoList
         {
             private SqlConnection connection;
+            private List<TestData> data;
 
             [SetUp]
             public void TruncateTable()
             {
                 connection = Db.GetConnection();
                 new DataLoader().TruncateTable(connection, "BulkTable");
+                data = new Generator().GetTestData();
             }
 
             [Test]
             public void Insert100000RowsFromPocoList()
             {
-                var data = new Generator().GetTestData();
-
-                Utils.TimedAction("Using BulkInsert: {0} ms",
+                Utils.TimedAction("Using SqlBulkCopyFromPocoList: {0} ms",
                                   () => new DataLoader().BulkInsert(connection, "BulkTable", data));
             }
         }
@@ -81,21 +82,21 @@ namespace BulkDemo.Test
         public class BulkInsertPocoListUsingTableLock
         {
             private SqlConnection connection;
+            private List<TestData> data;
 
             [SetUp]
             public void TruncateTable()
             {
                 connection = Db.GetConnection();
                 new DataLoader().TruncateTable(connection, "BulkTable");
+                data = new Generator().GetTestData();
             }
 
             [Test]
             public void Insert100000RowsFromPocoListWithTableLock()
             {
-                var data = new Generator().GetTestData();
-
-                Utils.TimedAction("Using BulkInsertWithTableLock: {0} ms",
-                                  () => DataLoader.BulkInsertWithTableLock(connection, "BulkTable", data));
+                Utils.TimedAction("Using SqlBulkCopyFromPocoListWithTableLock: {0} ms",
+                                  () => new DataLoader().BulkInsert(connection, "BulkTable", data, SqlBulkCopyOptions.TableLock));
             }
         }
 
@@ -103,21 +104,21 @@ namespace BulkDemo.Test
         public class BulkInsertWithSqlDataAdapter
         {
             private SqlConnection connection;
+            private DataTable data;
 
             [SetUp]
             public void TruncateTable()
             {
                 connection = Db.GetConnection();
                 new DataLoader().TruncateTable(connection, "BulkTable");
+                data = new Generator().GetDataTableData();
             }
 
             [Test]
             public void Insert1000000RowsWithSqlDataAdapter()
             {
-                var data = new Generator().GetDataTableData();
-
-                Utils.TimedAction("Using SqlDatAdapter: {0} ms",
-                                  () => new DataLoader().BulkInsertWithSqlDataAdapter(connection, data));
+                Utils.TimedAction("Using SqlDataAdapterFromDataTable: {0} ms",
+                                  () => new DataAdapterLoader().BulkInsert(connection, data));
             }
         }
 
@@ -130,7 +131,7 @@ namespace BulkDemo.Test
                 var data = new Generator().GetTestData();
                 DataTable table = null;
 
-                Utils.TimedAction("ToDataTable: {0} ms",
+                Utils.TimedAction("PocoListToDataTableWithReflection: {0} ms",
                                   () => table =  DataLoader.ListToDataTable(data));
 
                 Assert.IsNotNull(table);
@@ -144,7 +145,7 @@ namespace BulkDemo.Test
                 var data = new Generator().GetTestData();
                 DataTable table = null;
 
-                Utils.TimedAction("ToDataTableFF: {0} ms",
+                Utils.TimedAction("PocoListToToDataTableWithFasterFlect: {0} ms",
                                   () => table = DataLoader.ListToDataTableFasterflect(data));
 
                 Assert.IsNotNull(table);

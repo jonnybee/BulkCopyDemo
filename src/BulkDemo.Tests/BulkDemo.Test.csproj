@@ -85,6 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CreateDb.cs" />
+    <Compile Include="DataAdapterLoader.cs" />
     <Compile Include="Db.cs" />
     <Compile Include="Generator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
