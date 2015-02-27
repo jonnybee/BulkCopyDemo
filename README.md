@@ -1,9 +1,9 @@
 # BulkCopyDemo
 Shows 3 different implementations for BulkCopy with SqlServer and the takeway from this code is the DataLoader class that simplifies doing bulk inserts into table either directly from a poco class or from a DataTable that match the database table. 
 
-Rather than specifying mapping I prefer to structure poco classes in my code that match tha database and then populate the list and do the database update as fast as possible to avoid locks/downtime.
+Rather than specifying mapping I prefer to create poco classes in my code that match the database table column names and then populate the list with items and do the database update as fast as possible to avoid locks/downtime.
 
-Note: The DataLoader class when supplied with a poco list will implicitly transform the poco list into a datatable before it call SqlBulkCopy. This is basically the time difference when looking at elapsed time. 
+Note: The DataLoader class when supplied with a poco list will internally transform the poco list into a datatable before it calls SqlBulkCopy. This is basically the time difference when looking at elapsed time between tha methods that accepåt a DataTable and those that accept a . 
 
 Figures below is measured on my dev computer with database running on the same computer. Timing is for insert of 100000 rows into empty table.  
 
